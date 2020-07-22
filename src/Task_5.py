@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from Task_3_NN import step, get_model, short_trajectories
+from Task_3_4_NN import step, get_model, short_trajectories
 
 
 # The NN-model constructed in the paper has two hidden dimensions of width 16
