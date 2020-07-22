@@ -95,34 +95,8 @@ class GaussianProcess:
             print('Output noise std set to', output_noise_std,
                   'which might cause matrices to become non - positive definite.')
 
-        if not (self.__fdata is None):
-            self.__alpha, self.__L, self.__ll = self.data_cov(output_noise_std, verbose)
-
-    def data_cov(self, output_noise_std):
-        if (self.__initialized is None):
-            raise ValueError('Must initialize first')
-        k_xx = self.__kernel(self.__data, self.__data, self.__theta) + \
-               output_noise_std ** 2 * np.identity(self.__data.shape[0])
-        k_grad = self.__kernel_grad(self.__data, self.__data, self.__theta)
-        L = np.linalg.cholesky(k_xx)
-        alpha0, res0, _, _ = np.linalg.lstsq(L, self.__fdata, rcond=self.__rcond)
-        alpha, res, _, _ = np.linalg.lstsq(L.T, alpha0, rcond=self.__rcond)
-        logLikelihood = -1 / 2 * np.dot(self.__fdata.T, alpha) \
-                        - np.sum(np.log(np.diag(L))) \
-                        - L.shape[0] / 2 * np.log(2 * np.pi)
-
-        return alpha, L, np.array(logLikelihood).flatten()[0]
-
     def solve(self, x0, f0, xnew, gnew):
         """ solve d/dx[f](ynew)=g(ynew) for f """
-
-        if len(xnew.shape) == 1:
-            xnew = xnew.reshape(1, -1)
-        if len(gnew.shape) == 1:
-            gnew = gnew.reshape(1, -1)
-        if len(x0.shape) == 1:
-            x0 = x0.reshape(1, -1)
-
         k_xx = self.__kernel(self.__data, self.__data, self.__theta) + \
                self.__output_noise_std ** 2 * np.identity(self.__data.shape[0])
         k_xxinv = np.linalg.pinv(k_xx)
@@ -130,7 +104,7 @@ class GaussianProcess:
         k_grad = self.__kernel_grad(xnew, self.__data, self.__theta)
         mean_grad = np.zeros((xnew.shape[0] * xnew.shape[1], self.__data.shape[0]))
         for k in range(k_grad.shape[0]):
-            kxxx = np.dot(k_grad[k,:,:], k_xxinv)
+            kxxx = np.dot(k_grad[k, :, :], k_xxinv)
 
         mean_grad[(k * xnew.shape[0]):((k + 1) * xnew.shape[0]), :] = kxxx
         gnew = gnew.reshape(-1, 1)
@@ -189,7 +163,7 @@ if __name__ == '__main__':
 
     # solve the PDE
     gp = GaussianProcess(y, None, theta=epsilon, output_noise_std=noise)
-    Hy = gp.solve(x00, f0, y, gy, solver_tolerance=1e-6)
+    Hy = gp.solve(x00, f0, y, gy)
 
     data = solution1(x).reshape((N2, N1))
     ex = [np.min(x[:, 1]), np.max(x[:, 1]), np.min(x[:, 0]), np.max(x[:, 0])]
