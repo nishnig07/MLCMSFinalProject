@@ -4,11 +4,25 @@ from scipy.spatial import distance_matrix
 
 
 def gaussian_kernel(x, y, epsilon):
+    """
+    This method implements the gaussian kernel
+    :param x: data points in X
+    :param y: data points in Y
+    :param epsilon: kernel bandwidth
+    :return: return the gaussian kernel
+    """
     distMatrix = distance_matrix(x, y)
     return np.exp(-np.square(distMatrix) / epsilon ** 2)
 
 
 def kernel_gradient(x, y, epsilon):
+    """
+    This method implements the gradient of the gaussian kernel
+    :param x: data points in X
+    :param y: data points in Y
+    :param epsilon: kernel bandwidth
+    :return: Returns the gradient of kernel
+    """
     distMatrix = distance_matrix(x, y)
     ker_x = gaussian_kernel(x, y, epsilon)
     xmy = np.zeros((x.shape[1], x.shape[0], y.shape[0]))
@@ -25,6 +39,18 @@ def kernel_gradient(x, y, epsilon):
 
 
 def equation_solve(x0, f0, x, y, gy, epsilon, L, noise=1e-5):
+    """
+
+    :param x0: initial point
+    :param f0: H value at x0
+    :param x: data points in X
+    :param y: data points in Y
+    :param gy: gradients calculated from gradient() method
+    :param epsilon: kernel bandwidth
+    :param L: no. of RBFs
+    :param noise: noise
+    :return: nothing, plots the solutions calculated from lstsq() and rbf approach
+    """
     ker_y = gaussian_kernel(y, y, epsilon) + noise ** 2 * np.identity(x.shape[0])
     ker_y_inv = np.linalg.pinv(ker_y)
 
@@ -58,14 +84,27 @@ def equation_solve(x0, f0, x, y, gy, epsilon, L, noise=1e-5):
 
 
 def pendulum(yy1, yy2):
+    """
+    Hamiltonian pendulum
+    :param yy1: q values
+    :param yy2: p values
+    :return: original hamiltonian values
+    """
     return (yy2 ** 2) / 2 + (1 - np.cos(yy1))
 
 
 def gradient(xx1, xx2):
+    """
+    This method calculated the gradients
+    :param xx1: q values
+    :param xx2: p values
+    :return: array of the gradients
+    """
     return np.array([-np.sin(xx1), xx2])
 
 
 if __name__ == '__main__':
+    # Form the data points in X and Y
     Y_q, Y_p = np.linspace(-9, 9, 25), np.linspace(-1.5, 1.5, 25)
     X_q, X_p = np.linspace(-2 * np.pi, 2 * np.pi, 25), np.linspace(-1, 1, 25)
     xx1, xx2 = np.meshgrid(X_q, X_p)
@@ -81,8 +120,10 @@ if __name__ == '__main__':
     yr[:, 1] = np.random.uniform(low=np.min(Y_p), high=np.max(Y_p), size=(625))
     y = yr
 
+    # calculate the gradients
     gx = gradient(xx1, xx2)
 
+    # solve the system of equations and plot the solution
     equation_solve(x0, f0, x, y, gx, epsilon=2, noise=1e-5, L=625)
     data = pendulum(yy1, yy2)
 
